@@ -51,11 +51,11 @@
         const imageUpload = document.getElementById('imageUpload');
         const imagesContainer = document.getElementById('images');
 
-        uploadButton.addEventListener('click', () => {
+        uploadButton.addEventListener('click', async () => {
             const file = imageUpload.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = async (event) => {
                     const imgElement = document.createElement('img');
                     imgElement.src = event.target.result;
 
@@ -70,5 +70,48 @@
                     container.appendChild(link);
 
                     imagesContainer.appendChild(container);
+
+                    // 保存图片到 GitHub
+                    await saveImageToGitHub(file);
                 };
                 reader.readAsDataURL(file);
+            }
+        });
+
+        async function saveImageToGitHub(file) {
+            const base64Content = await fileToBase64(file);
+            const filePath = `images/${file.name}`;
+
+            const response = await fetch(`https://api.github.com/repos/xbrooke/my-img/contents/${filePath}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'token YOUR_NEW_GITHUB_TOKEN', // 替换为你的新 GitHub 令牌
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: 'Upload image: ' + file.name,
+                    content: btoa(base64Content)
+                })
+            });
+
+            const data = await response.json();
+            if (data.content && data.content.download_url) {
+                // 图片上传成功，显示 GitHub 上的路径
+                const githubImageUrl = data.content.download_url;
+                const githubImageLink = document.createElement('p');
+                githubImageLink.textContent = 'GitHub 图片链接: ' + githubImageUrl;
+                imagesContainer.appendChild(githubImageLink);
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]); // 只获取 Base64 数据部分
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</body>
+</html>
