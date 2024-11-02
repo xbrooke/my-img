@@ -263,80 +263,89 @@
 
     <div class="overlay" id="overlay" onclick="closeCopyOptions()"></div>
     <div class="copy-options" id="copyOptions">
-        <h3>选择复制链接的类型:</h3>
-        <button onclick="copyLinks('normal')">复制普通链接</button>
-        <button onclick="copyLinks('md')">复制MD链接</button>
-        <button onclick="closeCopyOptions()">关闭</button>
+        <h3>选择复制链接类型</h3>
+        <button onclick="copyLinks('all', 'normal')">复制普通链接</button>
+        <button onclick="copyLinks('all', 'md')">复制 Markdown 链接</button>
     </div>
 
     <div class="modal" id="imageModal" onclick="closeModal()">
-        <img id="modalImage" src="" alt="Image">
+        <img id="modalImage" src="" alt="">
     </div>
 
     <script>
         let imageData = {};
         let currentFolder = '';
-        const baseUrl = 'https://127.0.0.1:8080/img/';
+        const baseUrl = window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8080' : 'https://your-site-name.netlify.app';
 
         fetch('images.json')
             .then(response => response.json())
             .then(data => {
                 imageData = data;
-                renderFolderList();
-            })
-            .catch(error => console.error('Error loading images:', error));
+                displayFolders();
+            });
 
-        function renderFolderList() {
+        function displayFolders() {
             const folderList = document.getElementById('folderList');
-            folderList.innerHTML = '';
-            Object.keys(imageData).forEach(folder => {
+            for (const folder in imageData) {
                 const folderElement = document.createElement('h2');
                 folderElement.textContent = folder;
                 folderElement.onclick = () => loadImages(folder);
                 folderList.appendChild(folderElement);
-            });
+            }
         }
 
         function loadImages(folder) {
             currentFolder = folder;
             const imageContainer = document.getElementById('image-container');
-            const loading = document.getElementById('loading');
-            const noImages = document.getElementById('noImages');
             imageContainer.innerHTML = '';
+            const loading = document.getElementById('loading');
             loading.style.display = 'block';
+            const noImages = document.getElementById('noImages');
             noImages.style.display = 'none';
 
-            const images = imageData[folder];
-            if (!images || images.length === 0) {
+            const images = imageData[folder] || [];
+            if (images.length === 0) {
                 loading.style.display = 'none';
                 noImages.style.display = 'block';
                 return;
             }
 
             images.forEach(image => {
-                const imgWrapper = document.createElement('div');
-                imgWrapper.className = 'image-wrapper';
-                imgWrapper.innerHTML = `
-                    <img src="${baseUrl}${folder}/${image}" alt="${image}">
-                    <div class="image-name">${image}</div>
+                const imageWrapper = document.createElement('div');
+                imageWrapper.className = 'image-wrapper';
+                imageWrapper.innerHTML = `
+                    <img src="${baseUrl}/img/${folder}/${image}" alt="${image}">
                     <div class="image-actions">
-                        <button onclick="viewImage('${image}')">查看</button>
-                        <button onclick="copyLink('${folder}/${image}', 'normal')">复制普通链接</button>
-                        <button onclick="copyLink('${folder}/${image}', 'md')">复制MD链接</button>
+                        <button onclick="openImage('${baseUrl}/img/${folder}/${image}')">查看</button>
+                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'normal')">复制普通链接</button>
+                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'md')">复制 Markdown 链接</button>
                     </div>
                 `;
-                imageContainer.appendChild(imgWrapper);
+                imageContainer.appendChild(imageWrapper);
             });
 
             loading.style.display = 'none';
         }
 
+        function openImage(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = src;
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('show');
+        }
+
         function filterImages() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const images = document.querySelectorAll('.image-wrapper');
-            images.forEach(image => {
-                const imageName = image.querySelector('.image-name').textContent.toLowerCase();
-                image.style.display = imageName.includes(searchInput) ? 'block' : 'none';
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const imageWrappers = document.querySelectorAll('.image-wrapper');
+            imageWrappers.forEach(wrapper => {
+                const img = wrapper.querySelector('img');
+                const imageName = img.alt.toLowerCase();
+                wrapper.style.display = imageName.includes(query) ? 'block' : 'none';
             });
         }
 
@@ -344,59 +353,50 @@
             const imageContainer = document.getElementById('image-container');
             const images = Array.from(imageContainer.children);
             images.sort((a, b) => {
-                const nameA = a.querySelector('.image-name').textContent.toLowerCase();
-                const nameB = b.querySelector('.image-name').textContent.toLowerCase();
-                return criteria === 'name' ? nameA.localeCompare(nameB) : 0; 
+                const nameA = a.querySelector('img').alt;
+                const nameB = b.querySelector('img').alt;
+                return criteria === 'name' ? nameA.localeCompare(nameB) : 0;
             });
             imageContainer.innerHTML = '';
             images.forEach(image => imageContainer.appendChild(image));
         }
 
-        function viewImage(image) {
-            const modal = document.getElementById('imageModal');
-            const modalImage = document.getElementById('modalImage');
-            modalImage.src = `${baseUrl}${currentFolder}/${image}`;
-            modal.classList.add('show');
-        }
-
-        function closeModal() {
-            document.getElementById('imageModal').classList.remove('show');
-        }
-
-        function copyLink(path, type) {
-            const link = type === 'normal' 
-                ? `${baseUrl}${path}` 
-                : `![${path.split('/').pop()}](${baseUrl}${path})`;
-            navigator.clipboard.writeText(link).then(() => {
-                alert('链接已复制: ' + link);
-            }).catch(err => {
-                console.error('Error copying link: ', err);
-            });
-        }
-
         function showCopyOptions() {
-            document.getElementById('overlay').style.display = 'block';
-            document.getElementById('copyOptions').style.display = 'block';
+            const copyOptions = document.getElementById('copyOptions');
+            const overlay = document.getElementById('overlay');
+            copyOptions.style.display = 'block';
+            overlay.style.display = 'block';
         }
 
         function closeCopyOptions() {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('copyOptions').style.display = 'none';
+            const copyOptions = document.getElementById('copyOptions');
+            const overlay = document.getElementById('overlay');
+            copyOptions.style.display = 'none';
+            overlay.style.display = 'none';
         }
 
-        function copyLinks(type) {
-            const images = imageData[currentFolder];
-            const links = images.map(image => {
-                const path = `${currentFolder}/${image}`;
-                return type === 'normal' 
-                    ? `${baseUrl}${path}` 
-                    : `![${image}](${baseUrl}${path})`; 
-            }).join('\n');
-            navigator.clipboard.writeText(links).then(() => {
-                alert('链接已复制');
-                closeCopyOptions();
-            }).catch(err => {
-                console.error('Error copying links: ', err);
+        function copyLinks(type, linkType) {
+            let links = [];
+            if (type === 'all') {
+                imageData[currentFolder].forEach(image => {
+                    const link = `${baseUrl}/img/${currentFolder}/${image}`;
+                    if (linkType === 'md') {
+                        links.push(`[${image}](${link})`);
+                    } else {
+                        links.push(link);
+                    }
+                });
+            }
+            navigator.clipboard.writeText(links.join('\n')).then(() => {
+                alert('链接已复制: \n' + links.join('\n'));
+            });
+            closeCopyOptions();
+        }
+
+        function copyLink(link, linkType) {
+            const formattedLink = linkType === 'md' ? `[${link.split('/').pop()}](${link})` : link;
+            navigator.clipboard.writeText(formattedLink).then(() => {
+                alert('链接已复制: ' + formattedLink);
             });
         }
     </script>
