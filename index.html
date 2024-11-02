@@ -42,11 +42,11 @@
         .sidebar h2 {
             cursor: pointer;
             margin: 10px 0;
-            padding: 10px; /* 调整按钮内边距 */
+            padding: 10px; /* 调整内边距 */
             border-radius: 6px;
             transition: background-color 0.3s, transform 0.3s, color 0.3s;
             text-align: center;
-            font-size: 1em; /* 调整按钮字体大小 */
+            font-size: 1em; /* 调整字体大小 */
             color: #555;
             font-weight: bold;
             background-color: #f7f7f7;
@@ -70,7 +70,7 @@
         }
         #searchInput {
             flex: 1;
-            padding: 8px; /* 调整搜索框内边距 */
+            padding: 8px; /* 调整内边距 */
             border: 1px solid #ccc;
             border-radius: 4px;
             margin-right: 10px;
@@ -88,14 +88,13 @@
             gap: 10px;
         }
         .sort-buttons button {
-            padding: 8px 12px; /* 调整按钮内边距 */
+            padding: 8px 12px; /* 调整内边距 */
             border: none;
             border-radius: 4px;
             background-color: #007bff;
             color: white;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
-            font-size: 0.9em; /* 调整按钮字体大小 */
         }
         .sort-buttons button:hover {
             background-color: #0056b3;
@@ -127,6 +126,37 @@
             font-size: 0.8em; /* 调整图片名称字体大小 */
             color: #333;
         }
+        .image-actions {
+            display: none; 
+            position: absolute;
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* 覆盖背景 */
+            justify-content: center; 
+            align-items: center; 
+            flex-direction: column; 
+            color: white; 
+            z-index: 10;
+        }
+        .image-wrapper:hover .image-actions {
+            display: flex; 
+        }
+        .image-actions button {
+            border: none;
+            background-color: #007bff;
+            color: white;
+            padding: 5px 8px; /* 调整内边距 */
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            margin: 5px 0; /* 上下间距 */
+        }
+        .image-actions button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
         .modal {
             display: none;
             position: fixed;
@@ -157,13 +187,13 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.2em; /* 调整加载文字大小 */
+            font-size: 1.2em; /* 调整加载文本大小 */
             color: #333;
         }
         .no-images {
             display: none;
             text-align: center;
-            font-size: 1em; /* 调整没有图片提示大小 */
+            font-size: 1.2em;
             color: #999;
         }
     </style>
@@ -223,48 +253,57 @@
 
         async function loadImages(folder, images) {
             const loading = document.getElementById('loading');
-            loading.style.display = 'block'; 
+            loading.style.display = 'block';
             const container = document.getElementById('image-container');
             container.innerHTML = '';
-            allImages = [];
-            document.getElementById('noImages').style.display = 'none';
+            allImages = []; 
 
             try {
-                if (images.length === 0) {
-                    document.getElementById('noImages').style.display = 'block';
-                    return;
-                }
-
-                container.style.display = 'none';
-
-                images.forEach((image) => {
+                images.forEach(image => {
                     const wrapper = document.createElement('div');
-                    wrapper.classList.add('image-wrapper');
+                    wrapper.className = 'image-wrapper';
 
                     const img = document.createElement('img');
                     img.src = `img/${folder}/${image}`;
-                    img.alt = `Image from ${folder}`;
-                    img.setAttribute('data-name', image);
-                    img.onload = () => {
-                        wrapper.classList.add('show');
-                    };
-                    img.onerror = () => {
-                        img.src = 'path/to/placeholder/image.jpg';
-                        img.alt = '加载失败';
+                    img.alt = image;
+                    img.onclick = () => showImage(img.src);
+
+                    const name = document.createElement('div');
+                    name.className = 'image-name';
+                    name.innerText = image;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'image-actions';
+                    const copyButton = document.createElement('button');
+                    copyButton.innerText = '复制路径';
+                    copyButton.onclick = (e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(`${window.location.origin}/img/${folder}/${image}`).then(() => {
+                            alert('已复制访问路径！');
+                        });
                     };
 
-                    const imgName = document.createElement('div');
-                    imgName.classList.add('image-name');
-                    imgName.innerText = image;
+                    const downloadButton = document.createElement('button');
+                    downloadButton.innerText = '下载';
+                    downloadButton.onclick = (e) => {
+                        e.stopPropagation();
+                        const link = document.createElement('a');
+                        link.href = `img/${folder}/${image}`;
+                        link.download = image;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    };
+
+                    actions.appendChild(copyButton);
+                    actions.appendChild(downloadButton);
 
                     wrapper.appendChild(img);
-                    wrapper.appendChild(imgName);
-                    wrapper.onclick = () => openModal(img.src, image);
+                    wrapper.appendChild(name);
+                    wrapper.appendChild(actions);
                     container.appendChild(wrapper);
                     allImages.push({ folder, name: image });
                 });
-
-                container.style.display = 'grid'; 
             } catch (error) {
                 alert('加载图片失败: ' + error.message);
             } finally {
@@ -273,21 +312,6 @@
                     document.getElementById('noImages').style.display = 'block';
                 }
             }
-        }
-
-        function openModal(src, name) {
-            const modal = document.getElementById('modal');
-            const modalImage = document.getElementById('modalImage');
-            modalImage.src = src;
-            modalImage.alt = name;
-            modal.classList.add('show');
-            modal.setAttribute('aria-hidden', 'false');
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('modal');
-            modal.classList.remove('show');
-            modal.setAttribute('aria-hidden', 'true');
         }
 
         function filterImages() {
@@ -316,10 +340,24 @@
         }
 
         function copyAllLinks() {
-            const links = allImages.map(img => `img/${img.folder}/${img.name}`).join('\n');
+            const links = allImages.map(img => `${window.location.origin}/img/${img.folder}/${img.name}`).join('\n');
             navigator.clipboard.writeText(links).then(() => {
                 alert('已复制所有链接！');
             });
+        }
+
+        function showImage(src) {
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = src;
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
         }
 
         window.onload = loadFolders;
