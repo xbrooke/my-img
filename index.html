@@ -7,23 +7,27 @@
     <style>
         body {
             display: flex;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             height: 100vh;
-            background-color: #f0f0f0; /* 轻微调整背景色 */
+            background-color: #f8f9fa;
         }
         .sidebar {
-            width: 250px;
+            width: 250px; 
+            height: 100%; 
             background-color: #ffffff;
             padding: 20px;
             border-right: 1px solid #ddd;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-            overflow-y: auto; /* 添加滚动条 */
+            overflow-y: auto; 
+            position: fixed; 
+            top: 0;
+            left: 0;
         }
         .sidebar .logo {
             display: flex; 
             align-items: center; 
-            margin-bottom: 30px; /* 增加与文件夹的距离 */
+            margin-bottom: 30px;
         }
         .sidebar .logo img {
             max-width: 50px; 
@@ -33,68 +37,133 @@
         .sidebar h1 {
             font-size: 1.6em;
             color: #333;
-            margin: 0; /* 取消默认 margin */
+            margin: 0;
         }
         .sidebar h2 {
             cursor: pointer;
             margin: 10px 0;
             padding: 12px;
             border-radius: 6px;
-            transition: background-color 0.3s, transform 0.3s, color 0.3s; /* 添加颜色变化 */
+            transition: background-color 0.3s, transform 0.3s, color 0.3s;
             text-align: center;
             font-size: 1.1em;
-            color: #555; /* 调整颜色 */
+            color: #555;
             font-weight: bold;
-            background-color: #f7f7f7; /* 添加背景色 */
-            border: 1px solid transparent; /* 边框 */
+            background-color: #f7f7f7;
         }
         .sidebar h2:hover {
-            background-color: #e0e0e0; /* 悬停时变化 */
-            transform: scale(1.03); /* 悬停时轻微放大 */
-            color: #000; /* 悬停时文字变色 */
-            border: 1px solid #bbb; /* 悬停时边框 */
+            background-color: #e0e0e0;
+            transform: scale(1.03);
+            color: #000;
         }
         .gallery {
-            flex-grow: 1;
+            margin-left: 300px; 
             padding: 20px;
-            display: none; /* 默认隐藏画廊 */
-            transition: opacity 0.3s; /* 添加渐变效果 */
+            height: 100%; 
+            overflow-y: auto; 
+            padding-top: 20px; 
+        }
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        #searchInput {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        #searchInput:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+        }
+        .sort-buttons {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .sort-buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .sort-buttons button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .sort-buttons button:active {
+            transform: scale(1);
         }
         .image-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 10px;
-            margin-top: 20px;
         }
-        .image-container img {
+        .image-wrapper {
+            position: relative;
+            overflow: hidden; 
+            border-radius: 6px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
+            transition: transform 0.3s; 
+        }
+        .image-wrapper img {
             width: 100%; 
             height: auto;
-            border-radius: 6px; /* 圆角稍微加大 */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease; /* 添加平滑过渡 */
-            cursor: pointer; 
+            display: block;
         }
-        .image-container img:hover {
-            transform: scale(1.1); /* 鼠标悬停时放大 */
+        .image-name {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #333;
         }
-        /* 模态样式 */
         .modal {
-            display: none; /* 默认隐藏模态 */
+            display: none;
             position: fixed;
             z-index: 1000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
             background-color: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
+            opacity: 0; 
+            transition: opacity 0.3s ease; 
+        }
+        .modal.show {
+            display: flex; 
+            opacity: 1; 
         }
         .modal img {
             max-width: 90%;
             max-height: 90%;
-            border-radius: 10px; /* 圆角 */
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
+        }
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            color: #333;
+        }
+        .no-images {
+            display: none;
+            text-align: center;
+            font-size: 1.2em;
+            color: #999;
         }
     </style>
 </head>
@@ -104,62 +173,155 @@
             <img src="favicon.ico" alt="Logo">
             <h1>徐大兵的图库</h1>
         </div>
-        <div id="folderList"></div> <!-- 文件夹列表 -->
+        <div id="folderList"></div>
     </div>
     <div class="gallery" id="gallery">
-        <div class="image-container" id="image-container"></div> <!-- 图片容器 -->
+        <div class="loading" id="loading">加载中...</div>
+        <div class="no-images" id="noImages">该文件夹没有图片。</div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="搜索图片..." oninput="filterImages()">
+        </div>
+        <div class="sort-buttons">
+            <button onclick="copyAllLinks()">一键复制所有链接</button>
+            <button onclick="sortImages('name')">按名称排序</button>
+            <button onclick="sortImages('time')">按时间排序</button>
+        </div>
+        <div class="image-container" id="image-container"></div>
     </div>
-
-    <!-- 模态窗口 -->
-    <div class="modal" id="modal" onclick="closeModal()">
-        <img id="modalImage" src="" alt="放大图片">
+    <div class="modal" id="modal" aria-hidden="true" onclick="closeModal()">
+        <img id="modalImage" src="" alt="放大图片" aria-labelledby="modal">
     </div>
 
     <script>
-        // 加载文件夹和图片
+        let allImages = [];
+
         async function loadFolders() {
-            const response = await fetch('images.json'); // 读取 JSON 文件
-            const data = await response.json();
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('images.json');
+                if (!response.ok) throw new Error('网络错误');
+                
+                const data = await response.json();
+                const folderList = document.getElementById('folderList');
+                folderList.innerHTML = '';
 
-            const folderList = document.getElementById('folderList');
-            folderList.innerHTML = ''; // 清空文件夹列表
-
-            Object.keys(data).forEach(folder => {
-                const h2 = document.createElement('h2');
-                h2.innerText = folder;
-                h2.onclick = () => loadImages(folder, data[folder]); // 加载该文件夹下的图片
-                folderList.appendChild(h2);
-            });
+                Object.keys(data).forEach(folder => {
+                    const h2 = document.createElement('h2');
+                    h2.innerText = folder;
+                    h2.onclick = () => loadImages(folder, data[folder]);
+                    folderList.appendChild(h2);
+                });
+            } catch (error) {
+                alert('加载文件夹失败: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
         }
 
-        function loadImages(folder, images) {
+        async function loadImages(folder, images) {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block'; 
             const container = document.getElementById('image-container');
-            container.innerHTML = ''; // 清空图片容器
+            container.innerHTML = '';
+            allImages = [];
+            document.getElementById('noImages').style.display = 'none';
 
-            images.forEach(image => {
-                const img = document.createElement('img');
-                img.src = `img/${folder}/${image}`; // 图片路径
-                img.alt = `Image from ${folder}`;
-                img.onclick = () => openModal(img.src); // 点击图片放大
-                container.appendChild(img); // 添加到容器
-            });
-            document.getElementById('gallery').style.display = 'block'; // 显示画廊
+            try {
+                if (images.length === 0) {
+                    document.getElementById('noImages').style.display = 'block';
+                    return;
+                }
+
+                container.style.display = 'none';
+
+                images.forEach((image) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add('image-wrapper');
+
+                    const img = document.createElement('img');
+                    img.src = `img/${folder}/${image}`;
+                    img.alt = `Image from ${folder}`;
+                    img.setAttribute('data-name', image);
+                    img.onload = () => {
+                        wrapper.classList.add('show');
+                    };
+                    img.onerror = () => {
+                        img.src = 'path/to/placeholder/image.jpg';
+                        img.alt = '加载失败';
+                    };
+
+                    const imgName = document.createElement('div');
+                    imgName.classList.add('image-name');
+                    imgName.innerText = image;
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(imgName);
+                    wrapper.onclick = () => openModal(img.src, image);
+                    container.appendChild(wrapper);
+                    allImages.push({ folder, name: image });
+                });
+
+                container.style.display = 'grid'; 
+            } catch (error) {
+                alert('加载图片失败: ' + error.message);
+            } finally {
+                loading.style.display = 'none'; 
+                if (container.children.length === 0) {
+                    document.getElementById('noImages').style.display = 'block';
+                }
+            }
         }
 
-        function openModal(src) {
+        function openModal(src, name) {
             const modal = document.getElementById('modal');
             const modalImage = document.getElementById('modalImage');
-            modalImage.src = src; // 设置模态图片源
-            modal.style.display = 'flex'; // 显示模态
+            modalImage.src = src;
+            modalImage.alt = name;
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
         }
 
         function closeModal() {
             const modal = document.getElementById('modal');
-            modal.style.display = 'none'; // 关闭模态
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
         }
 
-        // 页面加载时调用
-        loadFolders();
+        function filterImages() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const images = document.querySelectorAll('.image-wrapper');
+            images.forEach(image => {
+                const imgName = image.querySelector('.image-name').innerText.toLowerCase();
+                image.style.display = imgName.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function sortImages(criteria) {
+            const container = document.getElementById('image-container');
+            const images = Array.from(container.children);
+            images.sort((a, b) => {
+                const nameA = a.querySelector('.image-name').innerText.toLowerCase();
+                const nameB = b.querySelector('.image-name').innerText.toLowerCase();
+                if (criteria === 'name') {
+                    return nameA.localeCompare(nameB);
+                }
+                // 如果有时间排序逻辑，可以在这里添加
+                return 0;
+            });
+            container.innerHTML = '';
+            images.forEach(image => container.appendChild(image));
+        }
+
+        function copyAllLinks() {
+            const links = allImages.map(img => `img/${img.folder}/${img.name}`).join('\n');
+            navigator.clipboard.writeText(links).then(() => {
+                alert('已复制所有链接！');
+            });
+        }
+
+        window.onload = loadFolders;
     </script>
 </body>
 </html>
