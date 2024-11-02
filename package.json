@@ -1,0 +1,9 @@
+{
+    "name": "your-project-name",
+    "version": "1.0.0",
+    "scripts": {
+        "update-img": "node update.js",
+        "dev": "npm run update-img && http-server -p 8080"
+    },
+    "dependencies": {}
+}
