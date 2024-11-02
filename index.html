@@ -35,18 +35,18 @@
             margin-right: 10px; 
         }
         .sidebar h1 {
-            font-size: 1.4em; /* 调整标题大小 */
+            font-size: 1.4em; 
             color: #333;
             margin: 0;
         }
         .sidebar h2 {
             cursor: pointer;
             margin: 10px 0;
-            padding: 10px; /* 调整内边距 */
+            padding: 10px; 
             border-radius: 6px;
             transition: background-color 0.3s, transform 0.3s, color 0.3s;
             text-align: center;
-            font-size: 1em; /* 调整字体大小 */
+            font-size: 1em; 
             color: #555;
             font-weight: bold;
             background-color: #f7f7f7;
@@ -70,7 +70,7 @@
         }
         #searchInput {
             flex: 1;
-            padding: 8px; /* 调整内边距 */
+            padding: 8px; 
             border: 1px solid #ccc;
             border-radius: 4px;
             margin-right: 10px;
@@ -88,7 +88,7 @@
             gap: 10px;
         }
         .sort-buttons button {
-            padding: 8px 12px; /* 调整内边距 */
+            padding: 8px 12px; 
             border: none;
             border-radius: 4px;
             background-color: #007bff;
@@ -123,7 +123,7 @@
         .image-name {
             text-align: center;
             margin-top: 5px;
-            font-size: 0.8em; /* 调整图片名称字体大小 */
+            font-size: 0.8em; 
             color: #333;
         }
         .image-actions {
@@ -133,7 +133,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* 覆盖背景 */
+            background-color: rgba(0, 0, 0, 0.8); 
             justify-content: center; 
             align-items: center; 
             flex-direction: column; 
@@ -147,11 +147,11 @@
             border: none;
             background-color: #007bff;
             color: white;
-            padding: 5px 8px; /* 调整内边距 */
+            padding: 5px 8px; 
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
-            margin: 5px 0; /* 上下间距 */
+            margin: 5px 0; 
         }
         .image-actions button:hover {
             background-color: #0056b3;
@@ -187,7 +187,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.2em; /* 调整加载文本大小 */
+            font-size: 1.2em; 
             color: #333;
         }
         .no-images {
@@ -195,6 +195,47 @@
             text-align: center;
             font-size: 1.2em;
             color: #999;
+        }
+        .copy-options {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            z-index: 1001;
+            text-align: center;
+        }
+        .copy-options h3 {
+            margin-bottom: 10px;
+        }
+        .copy-options button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            margin: 5px;
+        }
+        .copy-options button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
         }
     </style>
 </head>
@@ -213,154 +254,151 @@
             <input type="text" id="searchInput" placeholder="搜索图片..." oninput="filterImages()">
         </div>
         <div class="sort-buttons">
-            <button onclick="copyAllLinks()">一键复制所有链接</button>
+            <button onclick="showCopyOptions()">一键复制所有链接</button>
             <button onclick="sortImages('name')">按名称排序</button>
             <button onclick="sortImages('time')">按时间排序</button>
         </div>
         <div class="image-container" id="image-container"></div>
     </div>
-    <div class="modal" id="modal" aria-hidden="true" onclick="closeModal()">
-        <img id="modalImage" src="" alt="放大图片" aria-labelledby="modal">
+
+    <div class="overlay" id="overlay" onclick="closeCopyOptions()"></div>
+    <div class="copy-options" id="copyOptions">
+        <h3>选择复制链接的类型:</h3>
+        <button onclick="copyLinks('normal')">复制普通链接</button>
+        <button onclick="copyLinks('md')">复制MD链接</button>
+        <button onclick="closeCopyOptions()">关闭</button>
+    </div>
+
+    <div class="modal" id="imageModal" onclick="closeModal()">
+        <img id="modalImage" src="" alt="Image">
     </div>
 
     <script>
-        let allImages = [];
+        let imageData = {};
+        let currentFolder = '';
+        const baseUrl = 'http://127.0.0.1:8080/img/';
 
-        async function loadFolders() {
-            const loading = document.getElementById('loading');
-            loading.style.display = 'block';
-            
-            try {
-                const response = await fetch('images.json');
-                if (!response.ok) throw new Error('网络错误');
-                
-                const data = await response.json();
-                const folderList = document.getElementById('folderList');
-                folderList.innerHTML = '';
+        fetch('images.json')
+            .then(response => response.json())
+            .then(data => {
+                imageData = data;
+                renderFolderList();
+            })
+            .catch(error => console.error('Error loading images:', error));
 
-                Object.keys(data).forEach(folder => {
-                    const h2 = document.createElement('h2');
-                    h2.innerText = folder;
-                    h2.onclick = () => loadImages(folder, data[folder]);
-                    folderList.appendChild(h2);
-                });
-            } catch (error) {
-                alert('加载文件夹失败: ' + error.message);
-            } finally {
-                loading.style.display = 'none';
-            }
+        function renderFolderList() {
+            const folderList = document.getElementById('folderList');
+            folderList.innerHTML = '';
+            Object.keys(imageData).forEach(folder => {
+                const folderElement = document.createElement('h2');
+                folderElement.textContent = folder;
+                folderElement.onclick = () => loadImages(folder);
+                folderList.appendChild(folderElement);
+            });
         }
 
-        async function loadImages(folder, images) {
+        function loadImages(folder) {
+            currentFolder = folder;
+            const imageContainer = document.getElementById('image-container');
             const loading = document.getElementById('loading');
+            const noImages = document.getElementById('noImages');
+            imageContainer.innerHTML = '';
             loading.style.display = 'block';
-            const container = document.getElementById('image-container');
-            container.innerHTML = '';
-            allImages = []; 
+            noImages.style.display = 'none';
 
-            try {
-                images.forEach(image => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'image-wrapper';
-
-                    const img = document.createElement('img');
-                    img.src = `img/${folder}/${image}`;
-                    img.alt = image;
-                    img.onclick = () => showImage(img.src);
-
-                    const name = document.createElement('div');
-                    name.className = 'image-name';
-                    name.innerText = image;
-
-                    const actions = document.createElement('div');
-                    actions.className = 'image-actions';
-                    const copyButton = document.createElement('button');
-                    copyButton.innerText = '复制路径';
-                    copyButton.onclick = (e) => {
-                        e.stopPropagation();
-                        navigator.clipboard.writeText(`${window.location.origin}/img/${folder}/${image}`).then(() => {
-                            alert('已复制访问路径！');
-                        });
-                    };
-
-                    const downloadButton = document.createElement('button');
-                    downloadButton.innerText = '下载';
-                    downloadButton.onclick = (e) => {
-                        e.stopPropagation();
-                        const link = document.createElement('a');
-                        link.href = `img/${folder}/${image}`;
-                        link.download = image;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    };
-
-                    actions.appendChild(copyButton);
-                    actions.appendChild(downloadButton);
-
-                    wrapper.appendChild(img);
-                    wrapper.appendChild(name);
-                    wrapper.appendChild(actions);
-                    container.appendChild(wrapper);
-                    allImages.push({ folder, name: image });
-                });
-            } catch (error) {
-                alert('加载图片失败: ' + error.message);
-            } finally {
-                loading.style.display = 'none'; 
-                if (container.children.length === 0) {
-                    document.getElementById('noImages').style.display = 'block';
-                }
+            const images = imageData[folder];
+            if (!images || images.length === 0) {
+                loading.style.display = 'none';
+                noImages.style.display = 'block';
+                return;
             }
+
+            images.forEach(image => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = 'image-wrapper';
+                imgWrapper.innerHTML = `
+                    <img src="${baseUrl}${folder}/${image}" alt="${image}">
+                    <div class="image-name">${image}</div>
+                    <div class="image-actions">
+                        <button onclick="viewImage('${image}')">查看</button>
+                        <button onclick="copyLink('${folder}/${image}', 'normal')">复制普通链接</button>
+                        <button onclick="copyLink('${folder}/${image}', 'md')">复制MD链接</button>
+                    </div>
+                `;
+                imageContainer.appendChild(imgWrapper);
+            });
+
+            loading.style.display = 'none';
         }
 
         function filterImages() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
             const images = document.querySelectorAll('.image-wrapper');
             images.forEach(image => {
-                const imgName = image.querySelector('.image-name').innerText.toLowerCase();
-                image.style.display = imgName.includes(query) ? 'block' : 'none';
+                const imageName = image.querySelector('.image-name').textContent.toLowerCase();
+                image.style.display = imageName.includes(searchInput) ? 'block' : 'none';
             });
         }
 
         function sortImages(criteria) {
-            const container = document.getElementById('image-container');
-            const images = Array.from(container.children);
+            const imageContainer = document.getElementById('image-container');
+            const images = Array.from(imageContainer.children);
             images.sort((a, b) => {
-                const nameA = a.querySelector('.image-name').innerText.toLowerCase();
-                const nameB = b.querySelector('.image-name').innerText.toLowerCase();
-                if (criteria === 'name') {
-                    return nameA.localeCompare(nameB);
-                }
-                // 如果有时间排序逻辑，可以在这里添加
-                return 0;
+                const nameA = a.querySelector('.image-name').textContent.toLowerCase();
+                const nameB = b.querySelector('.image-name').textContent.toLowerCase();
+                return criteria === 'name' ? nameA.localeCompare(nameB) : 0; 
             });
-            container.innerHTML = '';
-            images.forEach(image => container.appendChild(image));
+            imageContainer.innerHTML = '';
+            images.forEach(image => imageContainer.appendChild(image));
         }
 
-        function copyAllLinks() {
-            const links = allImages.map(img => `${window.location.origin}/img/${img.folder}/${img.name}`).join('\n');
-            navigator.clipboard.writeText(links).then(() => {
-                alert('已复制所有链接！');
-            });
-        }
-
-        function showImage(src) {
-            const modal = document.getElementById('modal');
+        function viewImage(image) {
+            const modal = document.getElementById('imageModal');
             const modalImage = document.getElementById('modalImage');
-            modalImage.src = src;
+            modalImage.src = `${baseUrl}${currentFolder}/${image}`;
             modal.classList.add('show');
-            modal.setAttribute('aria-hidden', 'false');
         }
 
         function closeModal() {
-            const modal = document.getElementById('modal');
-            modal.classList.remove('show');
-            modal.setAttribute('aria-hidden', 'true');
+            document.getElementById('imageModal').classList.remove('show');
         }
 
-        window.onload = loadFolders;
+        function copyLink(path, type) {
+            const link = type === 'normal' 
+                ? `${baseUrl}${path}` 
+                : `![${path.split('/').pop()}](${baseUrl}${path})`;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('链接已复制: ' + link);
+            }).catch(err => {
+                console.error('Error copying link: ', err);
+            });
+        }
+
+        function showCopyOptions() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('copyOptions').style.display = 'block';
+        }
+
+        function closeCopyOptions() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('copyOptions').style.display = 'none';
+        }
+
+        function copyLinks(type) {
+            const images = imageData[currentFolder];
+            const links = images.map(image => {
+                const path = `${currentFolder}/${image}`;
+                return type === 'normal' 
+                    ? `${baseUrl}${path}` 
+                    : `![${image}](${baseUrl}${path})`; 
+            }).join('\n');
+            navigator.clipboard.writeText(links).then(() => {
+                alert('链接已复制');
+                closeCopyOptions();
+            }).catch(err => {
+                console.error('Error copying links: ', err);
+            });
+        }
     </script>
 </body>
 </html>
