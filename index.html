@@ -264,8 +264,8 @@
     <div class="overlay" id="overlay" onclick="closeCopyOptions()"></div>
     <div class="copy-options" id="copyOptions">
         <h3>选择复制链接类型</h3>
-        <button onclick="copyLinks('all', 'normal')">复制普通链接</button>
-        <button onclick="copyLinks('all', 'md')">复制 Markdown 链接</button>
+        <button onclick="copyLinks('all', 'normal')">复制 URL 链接</button>
+        <button onclick="copyLinks('all', 'md')">复制 MD 链接</button>
     </div>
 
     <div class="modal" id="imageModal" onclick="closeModal()">
@@ -275,7 +275,7 @@
     <script>
         let imageData = {};
         let currentFolder = '';
-        const baseUrl = window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8080' : 'https://your-site-name.netlify.app';
+        const baseUrl = window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8080' : 'https://h.xbrooke.cn';
 
         fetch('images.json')
             .then(response => response.json())
@@ -317,8 +317,8 @@
                     <img src="${baseUrl}/img/${folder}/${image}" alt="${image}">
                     <div class="image-actions">
                         <button onclick="openImage('${baseUrl}/img/${folder}/${image}')">查看</button>
-                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'normal')">复制普通链接</button>
-                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'md')">复制 Markdown 链接</button>
+                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'normal')">复制 URL</button>
+                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'md')">复制 MD 链接</button>
                     </div>
                 `;
                 imageContainer.appendChild(imageWrapper);
