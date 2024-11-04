@@ -381,7 +381,7 @@
                 imageData[currentFolder].forEach(image => {
                     const link = `${baseUrl}/img/${currentFolder}/${image}`;
                     if (linkType === 'md') {
-                        links.push(`[${image}](${link})`);
+                        links.push(`![${image}](${link})`);
                     } else {
                         links.push(link);
                     }
@@ -394,7 +394,7 @@
         }
 
         function copyLink(link, linkType) {
-            const formattedLink = linkType === 'md' ? `[${link.split('/').pop()}](${link})` : link;
+            const formattedLink = linkType === 'md' ? `![${link.split('/').pop()}](${link})` : link;
             navigator.clipboard.writeText(formattedLink).then(() => {
                 alert('链接已复制: ' + formattedLink);
             });
