@@ -1,9 +1,15 @@
 {
     "name": "your-project-name",
+    "type": "module",
     "version": "1.0.0",
     "scripts": {
         "update-img": "node update.js",
         "dev": "npm run update-img && http-server -p 8080"
     },
-    "dependencies": {}
+    "dependencies": {
+        "clipboardy": "^4.0.0",
+        "fs-extra": "^11.2.0",
+        "jimp": "^1.6.0",
+        "node-clipboard": "^1.2.0"
+    }
 }
