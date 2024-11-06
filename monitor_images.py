@@ -7,7 +7,7 @@ from watchdog.events import FileSystemEventHandler
 
 # 设置监控文件夹和目标文件夹
 folder_to_monitor = os.path.normpath(r"E:\360MoveData\Users\WIN\Desktop\my-github\my-img\img\Upload")
-target_folder_base = os.path.normpath(r"E:\360MoveData\Users\WIN\Desktop\my-github\my-img")
+target_folder_base = os.path.normpath(r"E:\360MoveData\Users\WIN\Desktop\my-github\my-img\img")  # 修改为 img 目录
 
 # 确保文件夹存在
 if not os.path.exists(folder_to_monitor):
@@ -59,7 +59,7 @@ class ImageHandler(FileSystemEventHandler):
 
     def get_today_folder(self):
         today = datetime.now().strftime("%Y-%m-%d")
-        today_folder = os.path.join(target_folder_base, today)
+        today_folder = os.path.join(target_folder_base, today)  # 在 img 文件夹下创建日期文件夹
         os.makedirs(today_folder, exist_ok=True)
         return today_folder, today
 
