@@ -1,10 +1,9 @@
 import os
-import shutil
+import subprocess
 import time
 import logging
 from pathlib import Path
 import pyperclip
-import subprocess
 
 # 设置日志级别
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -35,6 +34,12 @@ def get_next_file_number(folder: Path):
     existing_numbers = [int(f.stem) for f in existing_files if f.stem.isdigit()]
     return max(existing_numbers, default=0) + 1
 
+# 自动提交到 GitHub
+def git_commit_and_push():
+    subprocess.run(['git', 'add', '.'], check=True)  # 添加文件到 Git
+    subprocess.run(['git', 'commit', '-m', '自动上传图片并更新Markdown'], check=True)  # 提交
+    subprocess.run(['git', 'push', 'origin', 'main'], check=True)  # 推送到远程仓库
+
 # 监控文件夹
 def monitor_folder():
     while True:
@@ -59,6 +64,10 @@ def monitor_folder():
                 # 删除原文件
                 os.remove(file)
                 logging.info(f"原文件已删除: {file}")
+
+                # 提交更改到 GitHub 并触发 Netlify 部署
+                git_commit_and_push()
+                logging.info("Git 提交并推送成功，Netlify 自动部署触发。")
 
         time.sleep(5)
 
