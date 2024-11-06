@@ -1,12 +1,22 @@
 import os
 import shutil
+import time
 from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 # 设置监控文件夹和目标文件夹
-folder_to_monitor = r"C:\Users\Brooke\Desktop\my-github\my-img\img\Upload"
-target_folder_base = r"C:\Users\Brooke\Desktop\my-github\my-img\img"
+folder_to_monitor = os.path.normpath(r"E:\360MoveData\Users\WIN\Desktop\my-github\my-img\img\Upload")
+target_folder_base = os.path.normpath(r"E:\360MoveData\Users\WIN\Desktop\my-github\my-img")
+
+# 确保文件夹存在
+if not os.path.exists(folder_to_monitor):
+    print(f"监控文件夹 {folder_to_monitor} 不存在!")
+    exit()
+
+if not os.path.exists(target_folder_base):
+    print(f"目标文件夹 {target_folder_base} 不存在!")
+    exit()
 
 # 支持的图片格式
 valid_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.avif'}
@@ -34,6 +44,11 @@ class ImageHandler(FileSystemEventHandler):
                 # 复制链接到剪贴板（可选）
                 try:
                     import pyperclip
+                except ImportError:
+                    os.system('pip install pyperclip')
+                    import pyperclip
+                
+                try:
                     pyperclip.copy(markdown_link)
                     print("Markdown链接已复制到剪贴板")
                 except Exception as e:
@@ -55,15 +70,19 @@ class ImageHandler(FileSystemEventHandler):
         return max(existing_numbers, default=0) + 1  # 返回下一个文件编号
 
 if __name__ == "__main__":
+    # 打印监控和目标文件夹路径
+    print(f"监控文件夹: {folder_to_monitor}")
+    print(f"目标文件夹基础路径: {target_folder_base}")
+
     event_handler = ImageHandler()
-    observer = Observer()
+    observer = Observer(timeout=1)  # 添加超时设置
     observer.schedule(event_handler, folder_to_monitor, recursive=False)
     observer.start()
     print(f"开始监控文件夹: {folder_to_monitor}")
 
     try:
         while True:
-            pass  # 保持程序运行
+            time.sleep(1)  # 防止高 CPU 占用
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
