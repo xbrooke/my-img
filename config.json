@@ -3,7 +3,5 @@
     "target_folder_base": "E:\\360MoveData\\Users\\WIN\\Desktop\\my-github\\my-img\\img",
     "valid_extensions": [".jpg", ".jpeg", ".png", ".gif", ".avif"],
     "max_retry_count": 3,
-    "domain": "https://h.xbrooke.cn",
-    "folder_name_format": "%Y-%m-%d",
-    "file_name_format": "%Y%m%d_%H%M%S"
+    "base_url": "h.xbrooke.cn"
 }

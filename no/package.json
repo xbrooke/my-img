@@ -3,7 +3,7 @@
     "type": "module",
     "version": "1.0.0",
     "scripts": {
-        "update-img": "node update.js",
+        "update-img": "node update.cjs",
         "dev": "npm run update-img && http-server -p 8080"
     },
     "dependencies": {
