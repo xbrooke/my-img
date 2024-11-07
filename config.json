@@ -1,6 +1,6 @@
 {
-    "folder_to_monitor": "E:\\360MoveData\\Users\\WIN\\Desktop\\my-github\\my-img\\img\\Upload",
-    "target_folder_base": "E:\\360MoveData\\Users\\WIN\\Desktop\\my-github\\my-img\\img",
+    "folder_to_monitor": "C:\\Users\\Brooke\\Desktop\\my-github\\my-img\\img\\Upload",
+    "target_folder_base": "C:\\Users\\Brooke\\Desktop\\my-github\\my-img\\img",
     "valid_extensions": [".jpg", ".jpeg", ".png", ".gif", ".avif"],
     "max_retry_count": 3,
     "base_url": "h.xbrooke.cn"
