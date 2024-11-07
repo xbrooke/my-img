@@ -9,7 +9,15 @@
         "3.jpg",
         "4.avif",
         "4.jpg",
-        "6.avif"
+        "5.avif",
+        "6.avif",
+        "7.avif"
+    ],
+    "2024-11-07": [
+        "1.avif",
+        "2.avif",
+        "3.avif",
+        "4.avif"
     ],
     "Follow": [
         "1.avif",
@@ -28,6 +36,7 @@
         "8.avif",
         "9.avif"
     ],
+    "lb": [],
     "myimg": [
         "1.avif",
         "2.avif",
