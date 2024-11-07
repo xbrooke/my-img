@@ -36,7 +36,12 @@
         "8.avif",
         "9.avif"
     ],
-    "lb": [],
+    "lb": [
+        "1.webp",
+        "2.webp",
+        "3.webp",
+        "4.webp"
+    ],
     "myimg": [
         "1.avif",
         "2.avif",
