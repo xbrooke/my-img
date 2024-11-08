@@ -35,6 +35,15 @@
         "8.avif",
         "9.avif"
     ],
+    "22D": [
+        "1.avif",
+        "2.avif",
+        "3.avif",
+        "4.avif",
+        "5.avif",
+        "6.avif",
+        "7.avif"
+    ],
     "Follow": [
         "1.avif",
         "10.avif",
@@ -68,7 +77,22 @@
         "7.avif",
         "8.avif"
     ],
-    "Upload": [],
+    "Upload": [
+        "1.avif",
+        "10.avif",
+        "11.avif",
+        "12.avif",
+        "13.avif",
+        "18G.avif",
+        "2.avif",
+        "3.avif",
+        "4.avif",
+        "5.avif",
+        "6.avif",
+        "7.avif",
+        "8.avif",
+        "9.avif"
+    ],
     "vidhub": [
         "vidhub.avif"
     ]
