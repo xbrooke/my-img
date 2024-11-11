@@ -15,7 +15,7 @@ function scanImages(folder) {
         // 检查是否为文件夹
         if (fs.statSync(subFolderPath).isDirectory()) {
             const images = fs.readdirSync(subFolderPath).filter(file => {
-                return /\.(jpg|jpeg|png|gif|avif)$/i.test(file); // 过滤图片文件
+                return /\.(webp|jpg|jpeg|png|gif|avif)$/i.test(file); // 过滤图片文件
             });
             result[subFolder] = images; // 保存文件夹及其图片
         }
