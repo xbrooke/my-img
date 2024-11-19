@@ -264,170 +264,141 @@
     <div class="overlay" id="overlay" onclick="closeCopyOptions()"></div>
     <div class="copy-options" id="copyOptions">
         <h3>选择复制链接类型</h3>
-        <button onclick="copyLinks('all', 'url')">复制普通链接</button>
-        <button onclick="copyLinks('all', 'markdown')">复制 Markdown 链接</button>
-        <button onclick="closeCopyOptions()">关闭</button>
+        <button onclick="copyLinks('all', 'normal')">复制 URL 链接</button>
+        <button onclick="copyLinks('all', 'md')">复制 MD 链接</button>
     </div>
 
-    <div class="modal" id="modal">
-        <img id="modalImage" src="" alt="查看大图">
+    <div class="modal" id="imageModal" onclick="closeModal()">
+        <img id="modalImage" src="" alt="">
     </div>
 
     <script>
-        const baseUrl = window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8080' : (window.location.hostname === 'h.xbrooke.top' ? 'https://h.xbrooke.top' : 'https://h.xbrooke.cn');
-
-        let imagesData = {};
+        let imageData = {};
         let currentFolder = '';
-        let imageList = [];
+        const baseUrl = window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8080' : 'https://h.xbrooke.cn';
 
-        function fetchImages() {
-            fetch('images.json')
-                .then(response => response.json())
-                .then(data => {
-                    imagesData = data;
-                    populateFolderList();
-                });
-        }
+        fetch('images.json')
+            .then(response => response.json())
+            .then(data => {
+                imageData = data;
+                displayFolders();
+            });
 
-        function populateFolderList() {
-            const folderListDiv = document.getElementById('folderList');
-            folderListDiv.innerHTML = '';
-            Object.keys(imagesData).forEach(folder => {
+        function displayFolders() {
+            const folderList = document.getElementById('folderList');
+            for (const folder in imageData) {
                 const folderElement = document.createElement('h2');
                 folderElement.textContent = folder;
-                folderElement.onclick = () => loadFolder(folder);
-                folderListDiv.appendChild(folderElement);
-            });
-        }
-
-        function loadFolder(folder) {
-            currentFolder = folder;
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('noImages').style.display = 'none';
-            document.getElementById('gallery').style.display = 'block';
-            const imageContainer = document.getElementById('image-container');
-            imageContainer.innerHTML = '';
-            imageList = imagesData[folder];
-            if (imageList.length === 0) {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('noImages').style.display = 'block';
-            } else {
-                imageList.forEach(image => {
-                    const imageWrapper = document.createElement('div');
-                    imageWrapper.className = 'image-wrapper';
-                    const imageUrl = `${baseUrl}/img/${folder}/${image}`;
-                    imageWrapper.innerHTML = `
-                        <img src="${imageUrl}" alt="${image}">
-                        <div class="image-actions">
-                            <button onclick="viewImage('${imageUrl}')">查看</button>
-                            <button onclick="copyLink('${imageUrl}')">复制链接</button>
-                            <button onclick="copyMarkdown('${imageUrl}')">复制Markdown链接</button>
-                        </div>
-                        <div class="image-name">${image}</div>
-                    `;
-                    imageContainer.appendChild(imageWrapper);
-                });
-                document.getElementById('loading').style.display = 'none';
+                folderElement.onclick = () => loadImages(folder);
+                folderList.appendChild(folderElement);
             }
         }
 
-        function viewImage(url) {
-            document.getElementById('modalImage').src = url;
-            document.getElementById('modal').classList.add('show');
+        function loadImages(folder) {
+            currentFolder = folder;
+            const imageContainer = document.getElementById('image-container');
+            imageContainer.innerHTML = '';
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            const noImages = document.getElementById('noImages');
+            noImages.style.display = 'none';
+
+            const images = imageData[folder] || [];
+            if (images.length === 0) {
+                loading.style.display = 'none';
+                noImages.style.display = 'block';
+                return;
+            }
+
+            images.forEach(image => {
+                const imageWrapper = document.createElement('div');
+                imageWrapper.className = 'image-wrapper';
+                imageWrapper.innerHTML = `
+                    <img src="${baseUrl}/img/${folder}/${image}" alt="${image}">
+                    <div class="image-actions">
+                        <button onclick="openImage('${baseUrl}/img/${folder}/${image}')">查看</button>
+                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'normal')">复制 URL</button>
+                        <button onclick="copyLink('${baseUrl}/img/${folder}/${image}', 'md')">复制 MD 链接</button>
+                    </div>
+                `;
+                imageContainer.appendChild(imageWrapper);
+            });
+
+            loading.style.display = 'none';
+        }
+
+        function openImage(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = src;
+            modal.classList.add('show');
         }
 
         function closeModal() {
-            document.getElementById('modal').classList.remove('show');
-        }
-
-        function copyLink(url) {
-            const tempInput = document.createElement('input');
-            document.body.appendChild(tempInput);
-            tempInput.value = url;
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-        }
-
-        function copyMarkdown(url) {
-            const markdownLink = `![image](${url})`;
-            const tempInput = document.createElement('input');
-            document.body.appendChild(tempInput);
-            tempInput.value = markdownLink;
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('show');
         }
 
         function filterImages() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const filteredImages = imageList.filter(image => image.toLowerCase().includes(searchInput));
-            updateImageContainer(filteredImages);
-        }
-
-        function updateImageContainer(filteredImages) {
-            const imageContainer = document.getElementById('image-container');
-            imageContainer.innerHTML = '';
-            if (filteredImages.length === 0) {
-                const noResultsMessage = document.createElement('div');
-                noResultsMessage.textContent = '没有找到相关图片';
-                noResultsMessage.style.color = 'red';
-                imageContainer.appendChild(noResultsMessage);
-            } else {
-                filteredImages.forEach(image => {
-                    const imageWrapper = document.createElement('div');
-                    imageWrapper.className = 'image-wrapper';
-                    const imageUrl = `${baseUrl}/img/${currentFolder}/${image}`;
-                    imageWrapper.innerHTML = `
-                        <img src="${imageUrl}" alt="${image}">
-                        <div class="image-actions">
-                            <button onclick="viewImage('${imageUrl}')">查看</button>
-                            <button onclick="copyLink('${imageUrl}')">复制链接</button>
-                            <button onclick="copyMarkdown('${imageUrl}')">复制Markdown链接</button>
-                        </div>
-                        <div class="image-name">${image}</div>
-                    `;
-                    imageContainer.appendChild(imageWrapper);
-                });
-            }
-        }
-
-        function showCopyOptions() {
-            document.getElementById('copyOptions').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        }
-
-        function closeCopyOptions() {
-            document.getElementById('copyOptions').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-        }
-
-        function copyLinks(type, format) {
-            const links = imageList.map(image => {
-                const url = `${baseUrl}/img/${currentFolder}/${image}`;
-                return format === 'url' ? url : `![image](${url})`;
-            }).join('\n');
-            const tempInput = document.createElement('input');
-            document.body.appendChild(tempInput);
-            tempInput.value = links;
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            closeCopyOptions();
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const imageWrappers = document.querySelectorAll('.image-wrapper');
+            imageWrappers.forEach(wrapper => {
+                const img = wrapper.querySelector('img');
+                const imageName = img.alt.toLowerCase();
+                wrapper.style.display = imageName.includes(query) ? 'block' : 'none';
+            });
         }
 
         function sortImages(criteria) {
-            if (criteria === 'name') {
-                imageList.sort();
-            } else if (criteria === 'time') {
-                // Implement time-based sorting if you have time data
-                imageList.sort((a, b) => a.localeCompare(b)); // Example, adjust as needed
-            }
-            updateImageContainer(imageList);
+            const imageContainer = document.getElementById('image-container');
+            const images = Array.from(imageContainer.children);
+            images.sort((a, b) => {
+                const nameA = a.querySelector('img').alt;
+                const nameB = b.querySelector('img').alt;
+                return criteria === 'name' ? nameA.localeCompare(nameB) : 0;
+            });
+            imageContainer.innerHTML = '';
+            images.forEach(image => imageContainer.appendChild(image));
         }
 
-        // Initial setup
-        fetchImages();
+        function showCopyOptions() {
+            const copyOptions = document.getElementById('copyOptions');
+            const overlay = document.getElementById('overlay');
+            copyOptions.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function closeCopyOptions() {
+            const copyOptions = document.getElementById('copyOptions');
+            const overlay = document.getElementById('overlay');
+            copyOptions.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        function copyLinks(type, linkType) {
+            let links = [];
+            if (type === 'all') {
+                imageData[currentFolder].forEach(image => {
+                    const link = `${baseUrl}/img/${currentFolder}/${image}`;
+                    if (linkType === 'md') {
+                        links.push(`![${image}](${link})`);
+                    } else {
+                        links.push(link);
+                    }
+                });
+            }
+            navigator.clipboard.writeText(links.join('\n')).then(() => {
+                alert('链接已复制: \n' + links.join('\n'));
+            });
+            closeCopyOptions();
+        }
+
+        function copyLink(link, linkType) {
+            const formattedLink = linkType === 'md' ? `![${link.split('/').pop()}](${link})` : link;
+            navigator.clipboard.writeText(formattedLink).then(() => {
+                alert('链接已复制: ' + formattedLink);
+            });
+        }
     </script>
 </body>
 </html>
